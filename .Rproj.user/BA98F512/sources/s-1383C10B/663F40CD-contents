@@ -1,0 +1,4 @@
+# Data file for lm_patho
+lm_patho<- "https://raw.githubusercontent.com/BIS557/homework-1-starter-code/master/lm_patho.csv"
+usethis::use_data_raw
+usethis::use_data(lm_patho)

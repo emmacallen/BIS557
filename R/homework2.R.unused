@@ -1,0 +1,19 @@
+library(devtools)
+
+#Build vignettes with this function:
+devtools::build_vignettes()
+
+#Testing for overall colinearity
+library("mctest")
+x <- Hald[, -1]
+y <- Hald[, 1]
+mctest (x, y)
+Call:
+  omcdiag(x = x, y = y, Inter = TRUE, detr = detr, red = red, conf = conf,
+          theil = theil, cn = cn)
+
+#Testing for individual colinearity
+imcdiag(x = x, y, all = TRUE)
+Call:
+  imcdiag(x = x, y = y, method = method, corr = FALSE, vif = vif,
+          tol = tol, conf = conf, cvif = cvif, leamer = leamer, all = all)

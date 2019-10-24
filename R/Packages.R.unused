@@ -1,0 +1,23 @@
+install.packages("rsample")
+install.packages("mctest")
+install.packages("testthat")
+install.packages("devtools")
+install.packages("tidyr")
+install_github("statsmaths/casl", force = TRUE, repos= NULL)
+
+library(tidyr)
+library(mctest)
+library(ggplot2)
+library(devtools)
+library(roxygen2)
+library(dplyr)
+library(glmnet)
+library(rsample)
+library(casl)
+library(glmnet)
+library(testthat)
+#Build vignettes with this function:
+devtools::build_vignettes()
+
+.libPaths()
+devtools::check()

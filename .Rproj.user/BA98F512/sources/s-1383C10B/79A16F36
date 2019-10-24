@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571858900662.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "79A16F36",
+    "lastKnownWriteTime" : 1571859458,
+    "last_content_update" : 1571859458117,
+    "path" : "~/homework2/tests/testthat/test_ridge_regression.R",
+    "project_path" : "tests/testthat/test_ridge_regression.R",
+    "properties" : {
+        "cursorPosition" : "64,0",
+        "scrollLine" : "23"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

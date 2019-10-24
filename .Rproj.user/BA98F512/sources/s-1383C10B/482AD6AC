@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571527519532.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4023779915",
+    "id" : "482AD6AC",
+    "lastKnownWriteTime" : 1571880365,
+    "last_content_update" : 1571880365875,
+    "path" : "~/homework2/R/cross_validation.R",
+    "project_path" : "R/cross_validation.R",
+    "properties" : {
+        "cursorPosition" : "41,43",
+        "scrollLine" : "36",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
