@@ -1,0 +1,218 @@
+---
+title: "LastHomework"
+output:
+  pdf_document: default
+  html_document: default
+---
+## R Markdown
+
+All questions done in collaboration with Christina Harden and Sydney Pyror
+Code is adapted from CASL (Chapman & Hall/CRC Texts in Statistical Science)
+
+Question #1
+
+1. Using the keras package functions, use a neural network to predict the tip percentage from the NYC Taxicab dataset in Section 3.6.1. How does this compare to the ridge regression approach?
+
+Code adapted from section 8.10.2
+```{r}
+library(reticulate)
+use_python("/usr/local/bin/python3", required= TRUE)
+library(keras)
+install_keras()
+
+library(tensorflow)
+
+
+taxi <- read.csv("~/documents/casl/taxi.csv")
+head(taxi)
+
+
+mf <- model.frame(tip_perc ~ fare_amount +
+                     factor(pickup_hour) +
+                     factor(pickup_wday), data = taxi)
+mt <- attr(mf, "terms")
+X <- Matrix::sparse.model.matrix(mt, mf)
+y <- model.response(mf)
+
+mf <- data.matrix(mf, rownames.force=TRUE)
+
+#Split data into test and training
+#train_index <- data.matrix(mf, rownames.force = NA)
+#test_index <- data.matrix(mf, rownames.force = NA)
+
+
+# Random sample indexes
+train_index <- sample(1:nrow(mf), size= 0.8 * nrow(mf))
+test_index <- setdiff(1:nrow(mf), train_index)
+
+
+# Build X_train, y_train, X_test, y_test
+X_train <- X[train_index,]
+y_train <- y[train_index]
+
+X_test <- X[test_index,]
+y_test <- y[test_index]
+
+
+#Define model
+model <- keras_model_sequential()
+
+#Add layers
+model %>%
+layer_dense(units=4, input_shape=c(491292*4)) %>%
+  layer_activation(activation="softmax")
+
+#Compile model
+model %>% compile(loss='mean_squared_error',
+             optimizer=optimizer_sgd(lr=0.01,
+                        momentum=0.80),
+             metrics=c('accuracy'))
+
+ #Fit the model 
+history <- model %>%
+  fit(X_train, y_train, epochs=10,
+    validation_data=list(X_test, y_test))
+
+
+#Predict MSE
+mf$predict <- predict(model, X)
+tapply(mf$predict == mf$tip_perc, mean)
+
+
+```
+
+Ridge Regression 
+```{r}
+
+library(glmnet)
+library(casl)
+
+taxi <- read.csv("~/documents/casl/taxi.csv")
+head(taxi)
+
+set.seed(3)
+taxi$flag <- 2
+taxi$flag[sample(1:nrow(taxi), 100)] <- 1
+
+mf <- model.frame(tip_perc ~ fare_amount +
+                     factor(pickup_hour) +
+                      factor(pickup_wday), data = taxi)
+mt <- attr(mf, "terms")
+X <- Matrix::sparse.model.matrix(mt, mf)
+y <- model.response(mf)
+
+#change flag to tip
+set.seed(1)
+ridge <- glmnet::cv.glmnet(X[taxi$flag == 1,], y[taxi$flag== 1],
+                           alpha = 0, nfolds = 3,
+                           lambda.min.ratio = 0)
+beta_ridge <- coef(ridge, s = ridge$lambda.min)
+beta_ols <- coef(ridge, s = min(ridge$lambda))
+
+sum((beta_ridge)^2)
+
+sum((beta_ols)^2)
+
+y_hat <- predict(ridge, X, s = min(ridge$lambda))
+casl_util_rmse(y, y_hat, taxi$flag)
+```
+
+3. The keras package contains the function application_vgg16 that loads the VGG16 model for image classification. Load this model into R and print out the model. In each layer, the number of trainable weights is listed. What proportion of trainable weights is in the convolutional layers? Why is this such a small portion of the entire model? In other words, why do dense layers have many more weights than convolutional layers?
+
+```{r}
+library(reticulate)
+use_python("/usr/local/bin/python3", required= TRUE)
+library(keras)
+
+base_model <- application_vgg16(include_top = TRUE, weights = "imagenet",
+  input_tensor = NULL, input_shape = NULL, pooling = NULL,
+  classes = 1000)
+print(base_model)
+
+#10% of the trainable weights area in the convolutional layers. Pooling operators reduce the resolution of the image after applying a #convolution by halving of the width and height of the data. Convolutional #layers include weight-sharing, thus distributing the weights across each #location. Dense layers allow for complex features as every input is connected #to every output by a weight. 
+
+```
+
+
+4. Adjust the kernel size, and any other parameters you think are useful, in the convolutional neural network for EMNIST in Section 8.10.4. Can you improve on the classification rate?
+
+You can change the number of filters, the kernel size, and options for padding the input in the convulational neural network. 
+Here, I change the kernel to c(4,4) and filters to 40. The classification number is of correct predictions made divided by the total number of predictions made, multiplied by 100 to turn it into a percentage. Increasing the kernel size and number of filters can improve upon the classification rate. 
+
+#Could perform a log transformation on data
+```{r}
+
+library(keras)
+library(casl)
+
+emnist <- read.csv("~/documents/casl/emnist.csv")
+head(emnist)
+
+x28 <- readRDS("~/documents/casl/emnist_x28.rds")
+dim(x28)
+
+library(keras)
+Y <- to_categorical(emnist$class, num_classes=26L)
+emnist$class[seq_len(12)]
+
+Y[seq_len(12), seq_len(10)]
+
+X <- t(apply(x28, 1, cbind))
+
+X_train <- X[emnist$train_id == "train",]
+X_valid <- X[emnist$train_id != "train",]
+Y_train <- Y[emnist$train_id == "train",]
+Y_valid <- Y[emnist$train_id != "train",]
+
+
+#Unflatten the X data 
+
+X <- array(x28, dim = c(dim(x28), 1L))
+X_train <- X[emnist$train_id == "train", , , , drop=FALSE]
+X_valid <- X[emnist$train_id != "train", , , , drop=FALSE]
+
+
+model <- keras_model_sequential()
+model %>%
+  layer_conv_2d(filters = 40, kernel_size = c(4,4),
+                  input_shape = c(28, 28, 1),
+                  padding = "same") %>%
+  layer_activation(activation = "relu") %>%
+  layer_conv_2d(filters = 40, kernel_size = c(4,4),
+padding = "same") %>%
+layer_activation(activation = "relu") %>%
+layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+layer_dropout(rate = 0.5) %>%
+layer_conv_2d(filters = 40, kernel_size = c(4,4),
+padding = "same") %>%
+layer_activation(activation = "relu") %>%
+layer_conv_2d(filters = 40, kernel_size = c(4,4),
+              padding = "same") %>%
+layer_activation(activation = "relu") %>%
+layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+layer_dropout(rate = 0.5) %>%
+layer_flatten() %>%
+layer_dense(units = 128) %>%
+layer_activation(activation = "relu") %>%
+layer_dense(units = 128) %>%
+layer_activation(activation = "relu") %>%
+layer_dropout(rate = 0.5) %>%
+layer_dense(units = 26) %>%
+layer_activation(activation = "softmax")
+
+model %>% compile(loss = 'categorical_crossentropy',
+                  optimizer = optimizer_rmsprop(),
+                  metrics = c('accuracy'))
+
+history <- model %>%
+  fit(X_train, Y_train, epochs = 10,
+    validation_data = list(X_valid, Y_valid))
+
+emnist$predict <- predict_classes(model, X)
+tapply(emnist$predict == emnist$class, emnist$train_id,
+       mean)
+
+model$result
+```
+
+
